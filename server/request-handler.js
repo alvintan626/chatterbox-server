@@ -12,6 +12,26 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+
+/*
+server: `http://parse.${window.CAMPUS}.hackreactor.com/chatterbox/classes/messages`,
+
+
+// Put your parse application keys here!
+$.ajaxPrefilter(function (settings, _, jqXHR) {
+  jqXHR.setRequestHeader('X-Parse-Application-Id', 'PARSE_APP_ID');
+  jqXHR.setRequestHeader('X-Parse-REST-API-Key', 'PARSE_API_KEY');
+});
+
+// Put your campus prefix here
+window.CAMPUS = 'FILL_ME_IN';
+
+Server: http://parse.sfm6.hackreactor.com/
+App ID: 2745f6eedad1770c6ebaf03f8a97cf0cc2f66706
+API Key: 4f44a6835e581124936858b658e8ea99e278d371.
+
+*/
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -28,7 +48,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
+  
   // The outgoing status.
   var statusCode = 200;
 
@@ -71,3 +91,4 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+module.exports.requestHandler = requestHandler;
