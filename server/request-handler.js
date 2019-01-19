@@ -15,8 +15,15 @@ this file and include it in basic-server.js so that it actually works.
 var qs = require('querystring'); //this allows us to parse the data (look it up later!!)
 
 var postData = {
-  results: []
+  results: [{
+    username: "serverdefault",
+    text: "serverDefault",
+    createdAt: new Date(),
+    objectId: 0
+  }]
 };
+
+var objectId = 1;
 
 var requestHandler = function(request, response) {
   /* ultimate goals:
@@ -30,7 +37,7 @@ var requestHandler = function(request, response) {
   //if URL does NOT contain /classes/messages, we need to return statuscode 404;
   if (request.url !== '/classes/messages') {
     //return 404
-    console.log('url mismatch');
+    // console.log('url mismatch');
 
     var statusCode = 404; //file not found
     var headers = defaultCorsHeaders; //CORS stuff
@@ -39,7 +46,7 @@ var requestHandler = function(request, response) {
     response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
     response.end();
   } else if (request.method === "GET") {
-    console.log("get method received");
+    // console.log("get method received");
     var statusCode = 200; //200 means successful
     var headers = defaultCorsHeaders; //CORS stuff
     headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
@@ -54,29 +61,43 @@ var requestHandler = function(request, response) {
     // 2. store the data inside of the request inside of an object (do we have one?? maybe)
     // 3. Send a success status message (201)
 
-    console.log("POST method received");
+    // console.log("POST method received");
 
     //https://stackoverflow.com/questions/4295782/how-to-process-post-data-in-node-js
     //hint: look up query string
     //https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction/
-    var body = '';
+    console.log('postData before POST call: '+JSON.stringify(postData.results));
 
+    
+    var body = '';
     request.on('data', (data) => {
       body += data;
       let formattedData = JSON.parse(body);
+      formattedData.createdAt = new Date();
+      formattedData.objectId = objectId; //if we have duplicate text, it wont store
+      objectId++;
+
       postData.results.push(formattedData); //store the message
+      console.log('postData after POST call'+JSON.stringify(postData.results));
     });
 
-    
-
+  
     var statusCode = 201; //201 means successful creation
     var headers = defaultCorsHeaders; //CORS stuff
 
     headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
     response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
     response.end();
-  }
 
+  }
+  else if (request.method === "OPTIONS"){
+    var statusCode = 200; //200 means OK
+    var headers = defaultCorsHeaders; //CORS stuff
+
+    headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
+    response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
+    response.end();
+  }
   
 };
 
@@ -97,8 +118,6 @@ var defaultCorsHeaders = {
 };
 
 module.exports.requestHandler = requestHandler;
-
-
 
 /*
 1. We get the data
