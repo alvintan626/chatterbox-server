@@ -106,8 +106,8 @@ describe('Node Server Request Listener Function', function() {
   it('Should delete a message that is posted', function(){
     //first we createe a message to delete later
     var stubMsg = {
-      username: 'Jono',
-      text: 'Do my bidding!'
+      username: 'deletion test',
+      text: 'i should not exist in the future :('
     };
     var req = new stubs.request('/classes/messages', 'POST', stubMsg);
     var res = new stubs.response();
@@ -123,14 +123,18 @@ describe('Node Server Request Listener Function', function() {
     handler.requestHandler(req, res);
 
     var messages = JSON.parse(res._data).results;
-
-    var storage = messages.results; //storage has access to the added messages
+    var newMessageId = messages[messages.length-1].objectId;
+    console.log(JSON.stringify(newMessageId));
 
     expect(res._responseCode).to.equal(200);
 
+    console.log(`Before DELETE, last element is: ${JSON.stringify(messages[messages.length-1])}`)
+
     //how do we know which message we want to delete?
-    req = new stubs.request('/classes/messages', 'DELETE', stubMsg);
+    req = new stubs.request('/classes/messages', 'DELETE', newMessageId);
     res = new stubs.response();
+
+    handler.requestHandler(req, res);
 
     expect(res._responseCode).to.equal(200);
 
@@ -139,8 +143,10 @@ describe('Node Server Request Listener Function', function() {
     res = new stubs.response();
 
     handler.requestHandler(req, res);
-    var messages = JSON.parse(res._data).results;
-    var newStorage = messages.results; //storage has access to the added messages
+    var newMessages = JSON.parse(res._data).results;
+
+    console.log(`After DELETE, last element is: ${JSON.stringify(newMessages[newMessages.length-1])}`)
+
 
     expect(res._responseCode).to.equal(200);
 
@@ -148,9 +154,10 @@ describe('Node Server Request Listener Function', function() {
     // compare: storage.length to newStorage.length, and it should be 1 less
     // storage.length > newStorage.length
     // expect( storage.length > newStorage.length )
+    //console.log(`pre-Delete size: ${messages.length}, post-Delete size: ${newMessages.length}`);
 
-    expect(storage.length > newStorage.length).to.equal(true);
-    expect(storage.length).to.be.above(newStorage.length); 
+    expect(messages.length > newMessages.length).to.equal(true);
+    expect(messages.length).to.be.above(newMessages.length); 
 
   });
 });
