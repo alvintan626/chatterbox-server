@@ -73,5 +73,42 @@ describe('server', function() {
     });
   });
 
+  it('Should delete a message that is posted', function(done) {
+      //first step: create the different requestParam variables we will need
+      // we need: 1) post, 2) get, 3) delete, 4) get.
+      var postRequest = {
+        method: 'POST',
+        uri: 'http://127.0.0.1:3000/classes/messages',
+        json: {
+          username: 'deletion test',
+          text: 'i should not exist in the future :('
+        }
+      };
+      var getRequest = { //reusable (confirmed)
+        method: 'GET',
+        uri: 'http://127.0.0.1:3000/classes/messages'
+      };
+
+      request(postRequest, function (error, response, body) { //post
+        request(getRequest, function (error, response, body) { //get
+          var messages = JSON.parse(body).results;
+          var newMessageId = messages[messages.length-1].objectId; //for deletion
+          //now we can create the delete params:
+          var deleteRequest = {
+            method: 'DELETE',
+            uri: 'http://127.0.0.1:3000/classes/messages',
+            json: newMessageId
+          };
+          request(deleteRequest, function (error,response,body) { //delete request
+            request(getRequest, function (error, response, body) {
+              var newMessages = JSON.parse(body).results;
+              expect(messages.length > newMessages.length).to.equal(true);
+              expect(messages.length).to.be.above(newMessages.length); 
+              done();
+            })
+          })
+        })
+      })
+  });
 
 });
