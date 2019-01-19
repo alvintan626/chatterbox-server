@@ -88,8 +88,8 @@ describe('Node Server Request Listener Function', function() {
     expect(res._responseCode).to.equal(200);
     var messages = JSON.parse(res._data).results;
     expect(messages.length).to.be.above(0);
-    expect(messages[0].username).to.equal('Jono');
-    expect(messages[0].text).to.equal('Do my bidding!');
+    expect(messages[1].username).to.equal('Jono');
+    expect(messages[1].text).to.equal('Do my bidding!');
     expect(res._ended).to.equal(true);
   });
 
@@ -103,4 +103,54 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should delete a message that is posted', function(){
+    //first we createe a message to delete later
+    var stubMsg = {
+      username: 'Jono',
+      text: 'Do my bidding!'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(201);
+
+    //now we need to GET
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    var messages = JSON.parse(res._data).results;
+
+    var storage = messages.results; //storage has access to the added messages
+
+    expect(res._responseCode).to.equal(200);
+
+    //how do we know which message we want to delete?
+    req = new stubs.request('/classes/messages', 'DELETE', stubMsg);
+    res = new stubs.response();
+
+    expect(res._responseCode).to.equal(200);
+
+    //now we need to grab the new messages, hopefully without the deleted message!
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+
+    handler.requestHandler(req, res);
+    var messages = JSON.parse(res._data).results;
+    var newStorage = messages.results; //storage has access to the added messages
+
+    expect(res._responseCode).to.equal(200);
+
+    //expect: message array length to decrease by one
+    // compare: storage.length to newStorage.length, and it should be 1 less
+    // storage.length > newStorage.length
+    // expect( storage.length > newStorage.length )
+
+    expect(storage.length > newStorage.length).to.equal(true);
+    expect(storage.length).to.be.above(newStorage.length); 
+
+  });
 });
