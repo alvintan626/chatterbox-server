@@ -12,7 +12,7 @@ var App = {
     MessagesView.initialize();
 
     // Fetch initial batch of messages
-    App.startSpinner();
+    //App.startSpinner();
     App.fetch(App.stopSpinner);
 
 
@@ -21,6 +21,7 @@ var App = {
       },
 
   fetch: function(callback = ()=>{}) {
+    console.log("starting GET request");
     Parse.readAll((data) => {
 
       // Don't bother to update if we have no messages
