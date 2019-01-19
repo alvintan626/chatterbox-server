@@ -12,67 +12,72 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var qs = require('querystring'); //this allows us to parse the data (look it up later!!)
 
-/*
-server: `http://parse.${window.CAMPUS}.hackreactor.com/chatterbox/classes/messages`,
-
-
-// Put your parse application keys here!
-$.ajaxPrefilter(function (settings, _, jqXHR) {
-  jqXHR.setRequestHeader('X-Parse-Application-Id', 'PARSE_APP_ID');
-  jqXHR.setRequestHeader('X-Parse-REST-API-Key', 'PARSE_API_KEY');
-});
-
-// Put your campus prefix here
-window.CAMPUS = 'FILL_ME_IN';
-
-Server: http://parse.sfm6.hackreactor.com/
-App ID: 2745f6eedad1770c6ebaf03f8a97cf0cc2f66706
-API Key: 4f44a6835e581124936858b658e8ea99e278d371.
-
-*/
+var postData = {
+  results: []
+};
 
 var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  //
-  // They include information about both the incoming request, such as
-  // headers and URL, and about the outgoing response, such as its status
-  // and content.
-  //
-  // Documentation for both request and response can be found in the HTTP section at
-  // http://nodejs.org/documentation/api/
-
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  /* ultimate goals:
+    1. send a GET command from the client to request & return all of the messages store on the server
+    2. send a PUT command from the client to request that a message is stored on the Server
+    3. optionS????????
+  */
   
-  // The outgoing status.
-  var statusCode = 200;
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  //if URL does NOT contain /classes/messages, we need to return statuscode 404;
+  if (request.url !== '/classes/messages') {
+    //return 404
+    console.log('url mismatch');
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+    var statusCode = 404; //file not found
+    var headers = defaultCorsHeaders; //CORS stuff
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+    headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
+    response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
+    response.end();
+  } else if (request.method === "GET") {
+    console.log("get method received");
+    var statusCode = 200; //200 means successful
+    var headers = defaultCorsHeaders; //CORS stuff
+    headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
+    response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+
+    response.end(JSON.stringify(postData));  //Response.end will send the data inside () back to the client
+    
+  } else if (request.method === "POST") {
+    //console.log(request);
+    // 1. determine if post or get (we are at post):
+    // 2. store the data inside of the request inside of an object (do we have one?? maybe)
+    // 3. Send a success status message (201)
+
+    console.log("POST method received");
+
+    //https://stackoverflow.com/questions/4295782/how-to-process-post-data-in-node-js
+    //hint: look up query string
+    //https://nodejs.org/en/docs/guides/anatomy-of-an-http-transaction/
+    var body = '';
+
+    request.on('data', (data) => {
+      body += data;
+      let formattedData = JSON.parse(body);
+      postData.results.push(formattedData); //store the message
+    });
+
+    
+
+    var statusCode = 201; //201 means successful creation
+    var headers = defaultCorsHeaders; //CORS stuff
+
+    headers['Content-Type'] = 'application/json';    // Tells the client what type of data we're sending
+    response.writeHead(statusCode, headers); //writeHead fills out the headers of the respone
+    response.end();
+  }
+
+  
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -92,3 +97,14 @@ var defaultCorsHeaders = {
 };
 
 module.exports.requestHandler = requestHandler;
+
+
+
+/*
+1. We get the data
+2. We store the data on a string
+3. we parse the data using qs.parse()
+4. the result looks like:
+{ '{"username":"Jono","text":"Do my bidding!"}': '' }
+
+*/
